@@ -12,8 +12,10 @@ export
 
 
 
-import TrajectoryOptimization.Dynamics: trim_controls, build_state
-import TrajectoryOptimization: state_diff, state_diff_jacobian
+#import TrajectoryOptimization.Dynamics: trim_controls, build_state
+#import TrajectoryOptimization: state_diff, state_diff_jacobian
+#import TrajectoryOptimization: SizedDynamicsExpansion
+#const TO = TrajectoryOptimization
 abstract type AbstractController end
 abstract type LQRController <: AbstractController end
 abstract type TimeVaryingController <: AbstractController end
@@ -308,7 +310,7 @@ end
 # TODO: redo without static matrices
 function linearize(model::AbstractModel, Z::Traj)
     N = length(Z)
-    D = [TO.SizedDynamicsExpansion(model) for k = 1:N]
+    D = [SizedDynamicsExpansion(model) for k = 1:N]  # change that TO
     for k = 1:N
         _linearize!(D[k], model, Z[k])
     end
@@ -316,13 +318,13 @@ function linearize(model::AbstractModel, Z::Traj)
     B = [SMatrix(d.B) for d in D]
     return A,B
 end
-function _linearize!(D::TO.SizedDynamicsExpansion, model::AbstractModel, z::KnotPoint)
+function _linearize!(D::SizedDynamicsExpansion, model::AbstractModel, z::GeneralKnotPoint)  # TO module before SizedDynamicsExpansion
     discrete_jacobian!(RK3, D.∇f, model, z)
 	D.tmpA .= D.A_  # avoids allocations later
 	D.tmpB .= D.B_
     x2 = discrete_dynamics(RK3, model, z)
-    G1 = TO.state_diff_jacobian(model, state(z))
-    G2 = TO.state_diff_jacobian(model, x2)
+    G1 = state_diff_jacobian(model, state(z))         # change that TO before state_diff_jacobain
+    G2 = state_diff_jacobian(model, x2)               # change that TO
     TO.error_expansion!(D,G1,G2)
     return nothing
 end

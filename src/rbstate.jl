@@ -3,7 +3,7 @@
 export
     RBState,
     randbetween
-import TrajectoryOptimization.Dynamics: angular_velocity, linear_velocity, orientation
+#import TrajectoryOptimization.Dynamics: angular_velocity, linear_velocity, orientation
 
 struct RBState{T}
     r::SVector{3,T}

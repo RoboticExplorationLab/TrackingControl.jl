@@ -1,24 +1,26 @@
-# Test Tracking Controller Files
-# Test Interface
+# Test on the Module Itself
 
-# TO DO; Adding Proper Test and Checks using @Test
+#Pkg.add(PackageSpec(name="RobotDynamics", rev="master"))
 
+# TO DO:
+# Use TrajOpt and RobotDynamis last versions on last
+# Right now incompatible because of Rotations package
+# TO uses Rotations v0.13
+# RobotDynamics uses Rotations v.1
+
+# ATTENTION: Work in proper environment
+using RobotDynamics
 using StaticArrays
+using TrajectoryOptimization
 using LinearAlgebra
-using ForwardDiff
-using TrajectoryOptimization    # used for AbstractModel type
-using Plots
 
-const TO = TrajectoryOptimization
+include("TrackingControl.jl")
 
-include("knotpoint.jl")
-include("trajectories.jl")           # needs knotpoint.jl
-include("rbstate.jl")
-include("tracking_control.jl")       # needs rbstate.jl
-include("model.jl")                  # needs discrete_jacobian
+const TC = TrackingControl
 
-# Test on Dubin's Car
-struct DubinsCar{T} <: AbstractModel where{T}
+#const TO = TrajectoryOptimization
+
+struct DubinsCar{T} <: TO.AbstractModel where{T}
     param::T
 end
 
@@ -70,17 +72,3 @@ plot([X[i][1] for i=1:N],[X[i][2] for i=1:N])  # Position of Dubins Car in 2D pl
 # Constructor Traj(X, U, dt)
 
 Z = Traj(X, U, [prob.Z[i].dt for i=1:length(prob.Z)])
-
-# Should be able to do the followint (matter of var names)
-Z = Traj(prob.Z)
-typeof(prob.Z)
-isa(prob.Z[1], AbstractKnotPoint)
-
-Q = Matrix(Diagonal(ones(n)))
-R = Matrix(Diagonal(ones(m)))
-
-tracking_controller = TVLQR(model, Q, R, Z)
-
-isa(model, AbstractModel)
-
-Traj(prob.Z)

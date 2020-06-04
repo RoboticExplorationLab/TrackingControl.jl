@@ -1,11 +1,24 @@
 module TrackingControl
 
-#greet() = print("Hello World!")
+# DONE:
+# Removed dependency on TO by adding expansions.jl
+# question : Could we use expansions.jl in RobotDynamics ?
 
-using StaticArrays
+#TO DO:
+# Remove extra files already in RobotDynamics
+# i.e. figure out a way to use the KnotPoint structures from Robot Dynamics
+# for instance (need export in RobotDynamics ?)
+# Version Compatible on Rotations 
+
+using StaticArrays   # Needs to be here, a module is a separate name frame
 using LinearAlgebra
 using ForwardDiff
+using RobotDynamics
+using Rotations
 
+const RD = RobotDynamics
+
+# Robot Dynamics
 export
     AbstractModel,
     DynamicsExpansion,
@@ -51,15 +64,15 @@ export
     HermiteSimpson
 
 
-include("rbstate.jl")
-include("jacobian.jl")
+#include("rbstate.jl")
+#include("jacobian.jl")
 include("knotpoint.jl")
 include("model.jl")
+include("trajectories.jl")        # needs to be in order of dependencies ?
+include("tracking_control.jl")
+include("expansions.jl")          # needed for SizedDynamicsExpansion from TO
 #include("liestate.jl")
-include("rigidbody.jl")
-include("integration.jl")
-
-end # module
-
+#include("rigidbody.jl")
+#include("integration.jl")
 
 end # module
