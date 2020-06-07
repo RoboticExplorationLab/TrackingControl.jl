@@ -1,5 +1,9 @@
 abstract type AbstractExpansion{T} end
+abstract type AbstractTest end
 
+"""
+    Gradient Expansion
+"""
 struct GradientExpansion{T,N,M} <: AbstractExpansion{T}
 	x::SizedVector{N,T,1}
 	u::SizedVector{M,T,1}
@@ -8,6 +12,9 @@ struct GradientExpansion{T,N,M} <: AbstractExpansion{T}
 	end
 end
 
+"""
+    Sized Cost Expansion
+"""
 struct SizedCostExpansion{T,N0,N,M} <: AbstractExpansion{T}
 	# Cost Expansion Terms
 	x ::SizedVector{N0,T,1}
@@ -55,7 +62,9 @@ function SizedCostExpansion{T}(n::Int, m::Int) where T
 	SizedCostExpansion(x,xx,u,uu,ux, x, xx, u, uu, ux, tmp, x_)
 end
 
-
+"""
+    Sized Expansion
+"""
 struct SizedExpansion{T,N0,N,M} <: AbstractExpansion{T}
 	x::SizedVector{N,T,1}
 	xx::SizedMatrix{N,N,T,2}
@@ -95,6 +104,9 @@ struct SizedExpansion{T,N0,N,M} <: AbstractExpansion{T}
 	end
 end
 
+"""
+    Static Expansion
+"""
 struct StaticExpansion{T,N,M,NN,MM,NM} <: AbstractExpansion{T}
 	x::SVector{N,T}
 	xx::SMatrix{N,N,T,NN}
@@ -113,6 +125,9 @@ function StaticExpansion(x,xx,u,uu,ux)
 end
 
 
+"""
+    Sized Dynamics Expansion
+"""
 struct SizedDynamicsExpansion{T,N,N̄,M} <: AbstractExpansion{T}
 	∇f::Matrix{T} # n × (n+m+1)
 	A_::SubArray{T,2,Matrix{T},Tuple{UnitRange{Int},UnitRange{Int}},false}
@@ -122,6 +137,11 @@ struct SizedDynamicsExpansion{T,N,N̄,M} <: AbstractExpansion{T}
 	tmpA::SizedMatrix{N,N,T,2}
 	tmpB::SizedMatrix{N,M,T,2}
 	tmp::SizedMatrix{N,N̄,T,2}
+	function SizedDynamicsExpansion{T}(∇f,A_,B_,A,B,tmpA,tmpB,tmp) where T
+		n, k = size(∇f)
+		m = k-n-1
+		new{T,n,n,m}(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
+	end
 	function SizedDynamicsExpansion{T}(n0::Int, n::Int, m::Int) where T
 		∇f = zeros(n0,n0+m+1)
 		ix = 1:n0
@@ -136,7 +156,7 @@ struct SizedDynamicsExpansion{T,N,N̄,M} <: AbstractExpansion{T}
 		new{T,n0,n,m}(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
 	end
 	function SizedDynamicsExpansion{T}(n::Int, m::Int) where T
-		∇f = zeros(n,n+m+1)
+		∇f = zeros(n,n+m)                                       # changed to n+m
 		ix = 1:n
 		iu = n .+ (1:m)
 		A_ = view(∇f, ix, ix)
@@ -148,4 +168,112 @@ struct SizedDynamicsExpansion{T,N,N̄,M} <: AbstractExpansion{T}
 		tmp = zeros(n,n)
 		new{T,n,n,m}(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
 	end
+	#=
+	function SizedDynamicsExpansion{T}(model::AbstractModel) where T  # ADDED
+		n, m
+		∇f = zeros(n,n+m+1)
+		ix = 1:n
+		iu = n .+ (1:m)
+		A_ = view(∇f, ix, ix)
+		B_ = view(∇f, ix, iu)
+		A = SizedMatrix{n,n}(zeros(n,n))
+		B = SizedMatrix{n,m}(zeros(n,m))
+		tmpA = A
+		tmpB = B
+		tmp = zeros(n,n)
+		new{T,n,n,m}(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
+	end=#
+end
+
+#=function SizedDynamicsExpansion(n::Int, m::Int)
+	∇f = zeros(n,n+m+1)
+	ix = 1:n
+	iu = n .+ (1:m)
+	A_ = view(∇f, ix, ix)
+	B_ = view(∇f, ix, iu)
+	A = SizedMatrix{n,n}(zeros(n,n))
+	B = SizedMatrix{n,m}(zeros(n,m))
+	tmpA = A
+	tmpB = B
+	tmp = zeros(n,n)
+	SizedDynamicsExpansion(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
+end
+=#
+#=
+function SizedDynamicsExpansion{T,N,N̄,M}(∇f::Matrix{T}, # n × (n+m+1)
+	A_::SubArray{T,2,Matrix{T},Tuple{UnitRange{Int},UnitRange{Int}},false},
+	B_::SubArray{T,2,Matrix{T},Tuple{UnitRange{Int},UnitRange{Int}},false},
+	A::SizedMatrix{N̄,N̄,T,2},
+	B::SizedMatrix{N̄,M,T,2},
+	tmpA::SizedMatrix{N,N,T,2},
+	tmpB::SizedMatrix{N,M,T,2},
+	tmp::SizedMatrix{N,N̄,T,2}) where {T,N,N̄,M}
+	return SizedDynamicsExpansion(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
+end
+
+function SizedDynamicsExpansion(n0::Int, n::Int, m::Int)
+	∇f = zeros(n0,n0+m+1)
+	ix = 1:n0
+	iu = n0 .+ (1:m)
+	A_ = view(∇f, ix, ix)
+	B_ = view(∇f, ix, iu)
+	A = SizedMatrix{n,n}(zeros(n,n))
+	B = SizedMatrix{n,m}(zeros(n,m))
+	tmpA = SizedMatrix{n0,n0}(zeros(n0,n0))
+	tmpB = SizedMatrix{n0,m}(zeros(n0,m))
+	tmp = zeros(n0,n)
+	SizedDynamicsExpansion(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
+end
+
+function SizedDynamicsExpansion(n::Int, m::Int)
+	∇f = zeros(n,n+m+1)
+	ix = 1:n
+	iu = n .+ (1:m)
+	A_ = view(∇f, ix, ix)
+	B_ = view(∇f, ix, iu)
+	A = SizedMatrix{n,n}(zeros(n,n))
+	B = SizedMatrix{n,m}(zeros(n,m))
+	tmpA = A
+	tmpB = B
+	tmp = zeros(n,n)
+	SizedDynamicsExpansion(∇f,A_,B_,A,B,tmpA,tmpB,tmp)
+end
+=#
+
+"""
+Test
+"""
+
+struct Test <: AbstractTest
+	a::Int
+	b::Int
+	Test(a) = new(a, b)
+	Test() = new(0, 0)
+end
+
+
+########################### Error Expansion ####################################
+################################################################################
+
+@inline error_expansion!(D::Vector{<:SizedDynamicsExpansion}, model::AbstractModel, G) = nothing
+
+function error_expansion!(D::Vector{<:SizedDynamicsExpansion}, model::RigidBody, G)
+	for k in eachindex(D)
+		error_expansion!(D[k], G[k], G[k+1])
+	end
+end
+
+function error_expansion!(D::SizedDynamicsExpansion,G1,G2)
+    mul!(D.tmp, D.tmpA, G1)
+    mul!(D.A, Transpose(G2), D.tmp)
+    mul!(D.B, Transpose(G2), D.tmpB)
+end
+
+@inline error_expansion(D::SizedDynamicsExpansion, model::RigidBody) = D.A, D.B
+@inline error_expansion(D::SizedDynamicsExpansion, model::AbstractModel) = D.tmpA, D.tmpB
+@inline SizedDynamicsExpansion(model::AbstractModel) = SizedDynamicsExpansion{Float64}(model)
+@inline function SizedDynamicsExpansion{T}(model::AbstractModel) where T
+	n,m = size(model)
+	n̄ = state_diff_size(model)
+	SizedDynamicsExpansion{T}(n,n̄,m)
 end

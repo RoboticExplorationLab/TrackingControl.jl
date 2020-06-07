@@ -15,16 +15,15 @@ using TrajectoryOptimization
 using LinearAlgebra
 
 include("TrackingControl.jl")
-
 const TC = TrackingControl
 
 #const TO = TrajectoryOptimization
 
-struct DubinsCar{T} <: TO.AbstractModel where{T}
+struct DubinsCar{T} <: TC.AbstractModel where{T}
     param::T
 end
 
-function TO.dynamics(model::DubinsCar, x, u)   # because we use "using" so need to add TO.dynamics to extend dynamics function from TO module
+function TC.dynamics(model::DubinsCar, x, u)   # because we use "using" so need to add TO.dynamics to extend dynamics function from TO module
     SA[u[1]*cos(x[3]),u[1]*sin(x[3]),u[2]]
 end
 

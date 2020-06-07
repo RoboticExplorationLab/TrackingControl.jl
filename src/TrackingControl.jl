@@ -2,77 +2,103 @@ module TrackingControl
 
 # DONE:
 # Removed dependency on TO by adding expansions.jl
-# question : Could we use expansions.jl in RobotDynamics ?
+# All exports from RobotDynamics can be used directly
 
 #TO DO:
-# Remove extra files already in RobotDynamics
-# i.e. figure out a way to use the KnotPoint structures from Robot Dynamics
-# for instance (need export in RobotDynamics ?)
-# Version Compatible on Rotations 
+# Version Compatible on Rotations in TrajOpt
+# question : Could we use expansions.jl in RobotDynamics ?
 
 using StaticArrays   # Needs to be here, a module is a separate name frame
 using LinearAlgebra
 using ForwardDiff
 using RobotDynamics
 using Rotations
+#using TrajectoryOptimization
 
-const RD = RobotDynamics
-
-# Robot Dynamics
+# From trajectories.jl
 export
-    AbstractModel,
-    DynamicsExpansion,
-    dynamics,
-    jacobian!,
-    discrete_dynamics,
-    discrete_jacobian!,
-    linearize,
-    linearize!,
-    state_dim,
-    control_dim,
-    state_diff_size,
-    rollout!
+    AbstractTrajectory
+#    Traj
+#    discrete_dynamics!
+#    rollout!
+
+# From expansions.jl
+export
+    AbstractExpansion
+
+# From trackingcontrollers.jl
+export
+    get_control,
+    TVLQR,
+    LQR,
+    MLQR,
+    simulate,
+    SE3Tracking,
+    HFCA,
+    test_ICs
+
+export
+    KnotPoint
+    discrete_dynamics
+    #AbstractTrajectory
+    AbstractModel
+
+#export
+#    AbstractModel,
+#    DynamicsExpansion,
+#    dynamics,
+#    jacobian!,
+#    discrete_dynamics,
+#    discrete_jacobian!,
+#    linearize,
+#    linearize!,
+#    state_dim,
+#    control_dim,
+#    state_diff_size,
+#    rollout!
 
 # rigid bodies
-export
-    LieGroupModel,
-    RigidBody,
-    RBState,
-    orientation,
-    linear_velocity,
-    angular_velocity
+#export
+#    LieGroupModel,
+#    RigidBody,
+#    RBState,
+#    orientation,
+#    linear_velocity,
+#    angular_velocity
 
 
 # knotpoints
-export
-    AbstractKnotPoint,
-    KnotPoint,
-    StaticKnotPoint,
-    state,
-    control,
-    states,
-    controls,
-    set_states!,
-    set_controls!
+#export
+#    AbstractKnotPoint,
+#    KnotPoint,
+#    StaticKnotPoint,
+#    state,
+#    control,
+#    states,
+#    controls,
+#    set_states!,
+#    set_controls!
 
 # integration
-export
-    QuadratureRule,
-    RK2,
-    RK3,
-    RK4,
-    HermiteSimpson
+#export
+#    QuadratureRule,
+#    RK2,
+#    RK3,
+#    RK4,
+#    HermiteSimpson
 
 
-#include("rbstate.jl")
-#include("jacobian.jl")
-include("knotpoint.jl")
-include("model.jl")
-include("trajectories.jl")        # needs to be in order of dependencies ?
-include("tracking_control.jl")
-include("expansions.jl")          # needed for SizedDynamicsExpansion from TO
-#include("liestate.jl")
-#include("rigidbody.jl")
-#include("integration.jl")
+#include("rbstate.jl")            # In RobotDynamics
+#include("jacobian.jl")           # In RobotDynamics
+#include("knotpoint.jl")          # In RobotDynamics
+#include("model.jl")              # In RobotDynamics
+#include("liestate.jl")           # In RobotDynamics
+#include("rigidbody.jl")          # In RobotDynamics
+#include("integration.jl")        # In RobotDynamics
+
+include("trajectories.jl")        # needs to be in order of dependencies yes
+include("expansions.jl")          # needed for SizedDynamicsExpansion
+include("trackingcontrollers.jl")    # contains controllers
+
 
 end # module
