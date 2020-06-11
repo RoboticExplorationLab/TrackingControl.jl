@@ -33,6 +33,7 @@ struct TVLQR{L,TK} <: TimeVaryingController
     model::L
     Z::Traj
     K::Vector{TK}
+    P::Any     # Added (need to find right type)
     t::Vector{Float64}
 end
 
@@ -40,9 +41,9 @@ end
 """
 function TVLQR(model::AbstractModel, Q, R, Z::Traj)
     A,B = linearize(model, Z)
-    K = tvlqr(A,B,Q,R)
+    K, P = tvlqr(A,B,Q,R)
     t = [z.t for z in Z]
-    TVLQR(model,Z,K,t)
+    TVLQR(model,Z,K,P,t)
 end
 
 function TVLQR(model::RigidBody, Q, R, X::Vector{<:RBState}, U::Vector{<:AbstractVector}, dt)
@@ -62,13 +63,18 @@ function get_control(cntrl::TVLQR, x, t)
     return cntrl.K[k]*dx + control(zref)
 end
 
+function get_value_function(cntrl::TVLQR)
+
+end
+
 function tvlqr(A, B, Q, R)
     n,m = size(B[1])
     K = [@SMatrix zeros(m,n) for k = 1:length(A)]
-    tvlqr!(K, A, B, Q, R)
+    P = [@SMatrix zeros(n,n) for k = 1:length(A)]
+    tvlqr!(K, P, A, B, Q, R)
 end
 
-function tvlqr!(K, A, B, Q, R)
+function tvlqr!(K, P, A, B, Q, R)
     N = length(A)
 
     # Solve infinite-horizon at goal state
@@ -76,11 +82,11 @@ function tvlqr!(K, A, B, Q, R)
     Qf = Q
 
     P_ = similar_type(A[N])
-    P = copy(Qf)
+    P[N] = copy(Qf)
     for k = N-1:-1:1
-        P,K[k] = riccati(P,A[k],B[k],Q,R)
+        P[k],K[k] = riccati(P[k+1],A[k],B[k],Q,R)
     end
-    return K
+    return K, P
 end
 
 function riccati(P,A,B,Q,R)
@@ -90,7 +96,7 @@ function riccati(P,A,B,Q,R)
 end
 
 
-""" Discrete LQR
+""" Discrete LQR Infinite Horizon
 """
 struct LQR{T,N,M,TK} <: LQRController
     K::TK
@@ -100,6 +106,7 @@ end
 
 function LQR(model::AbstractModel, dt::Real, Q, R,
         xeq=zeros(model)[1], ueq=trim_controls(model))
+    # Infinite Horizon Case
     # Linearize the model
     A,B = linearize(model, xeq, ueq, dt)
 
@@ -112,6 +119,44 @@ function get_control(cntrl::LQR, x, t)
     dx = x - cntrl.xref
     return cntrl.K*dx + cntrl.uref
 end
+
+""" Discrete LQR Finite Horizon
+"""
+
+function LQR(model::AbstractModel, dt::Real, Q, R, Qf, xeq, ueq, N)
+    # N is the horizon in discrete time steps
+    #Linearize the model
+    A,B = linearize(model, xeq, ueq, dt)
+
+    #Calculate Sequence of Optimal Gains (Finite Horizon)
+    P_list, K_list = calc_finite_LQR_gain(Qf, A, B, Q, R, N)
+
+    return LQR(K_list, xeq, ueq)
+end
+
+function calc_finite_LQR_gain(Qf, A, B, Q, R, N)
+    # OUTPUT P sequence ordered in time
+    P_list = [Qf]
+    P = Qf
+    K_list = [-(R + B'P*B)\(B'P*A)]
+    for i=1:N-1
+        P, K = riccati(P, A, B, Q, R)
+        push!(P_list, P)
+        push!(K_list, K)
+    end
+    P, K = riccati(P, A, B, Q, R)
+    push!(P_list, P)
+    return reverse(P_list), reverse(K_list)
+end
+
+"""Continuous Time LQR Finite Horizon
+"""
+
+
+
+"""Continuous Time LQR Infinite Horizon
+"""
+
 
 """ Multiplicative LQR
 """

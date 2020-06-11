@@ -9,6 +9,8 @@
 # Generate Optimal Trajectory using Trajopt ####################################
 ################################################################################
 
+cd("C:\\Users\\33645\\Documents\\Stanford\\AA290ZAC - RA Fall 2019\\github\\TrackingControl.jl")
+
 using TrajectoryOptimization
 using StaticArrays
 using LinearAlgebra
@@ -44,7 +46,7 @@ obj = LQRObjective(Q, R, N*Q, xf, N)
 # Constraints
 cons = TO.ConstraintSet(n,m,N)
 add_constraint!(cons, GoalConstraint(xf), N:N)
-add_constraint!(cons, BoundConstraint(n,m, u_min=-1, u_max=1), 1:N-1)
+add_constraint!(cons, BoundConstraint(n,m, u_min=-1e10, u_max=1e10), 1:N-1)
 
 # Create and solve problem
 prob = Problem(model, obj, xf, tf, x0=x0, constraints=cons)
@@ -70,8 +72,9 @@ Z = Traj(X, U, [prob.Z[i].dt for i=1:length(prob.Z)])
 # Track Reference Trajectory using LQR #########################################
 ################################################################################
 
-using TrackingControl
-const TC = TrackingControl
+#using TrackingControl
+#const TC = TrackingControl
+include("..\\src\\TrackingControl.jl")
 
 # Define TVLQR Cost Matrices
 ρ = 1.0
@@ -79,7 +82,7 @@ Q = Diagonal(@SVector ones(n))
 R = ρ*Diagonal(@SVector ones(m))
 
 # Define TVLQR controller on model
-tvlqr_cntrl = TVLQR(model, Q, R, Z)
+tvlqr_cntrl = TC.TVLQR(model, Q, R, Z)
 
 # Extract the Tracking trajectory for a given initial condition
 function get_tracking_trajectory(cntrl::TVLQR, model, x0, dt)

@@ -205,6 +205,7 @@ using StaticArrays
 using LinearAlgebra
 using ForwardDiff
 using Plots
+using RobotDynamics
 
 G = TrackingControl
 T = Float64
@@ -219,8 +220,9 @@ end
 
 @inline controller(t) = [1.0;sin(t)]
 
-n, m = size(model)  # need to do something
 model = DubinsCar(0.0)
+#n, m = size(model)  # need to do something
+n, m = 3, 2
 x0 = [0.0;0.0;π/2]
 dt = 0.1
 t0 = 0.0
@@ -280,3 +282,6 @@ Z_track = get_tracking_trajectory(tvlqr_cntrl, model, x_start, dt)
 X_track = [Z_track.data[i].z[1] for i=1:length(Z_track.data)]
 Y_track = [Z_track.data[i].z[2] for i=1:length(Z_track.data)]
 plot!(X_track, Y_track)
+
+# Get the value function now
+tvlqr_cntrl.P

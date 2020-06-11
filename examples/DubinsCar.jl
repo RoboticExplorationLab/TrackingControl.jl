@@ -106,3 +106,6 @@ Y_track = [Z_track.data[i].z[2] for i=1:length(Z_track.data)]
 # Plot Tracking Trajectory on top
 plot!(X_track, Y_track, label = "Tracking Trajectory",
                         linewidth = 2.5)  # Plot tracking trajectory
+
+# Extract Lyapunov Function from TVLQR
+P_list = []
