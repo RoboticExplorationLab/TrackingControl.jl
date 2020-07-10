@@ -15,11 +15,11 @@ T = Float64
 
 # Use TrajectoryOptimization to get the Nominal Trajectory
 
-struct DubinsCar{T} <: G.AbstractModel where{T}
+struct DubinsCar{T} <: TO.AbstractModel where{T}
     param::T
 end
 
-function G.dynamics(model::DubinsCar, x, u)   # because we use "using" so need to add TO.dynamics to extend dynamics function from TO module
+function TO.dynamics(model::DubinsCar, x, u)   # because we use "using" so need to add TO.dynamics to extend dynamics function from TO module
     SA[u[1]*cos(x[3]),u[1]*sin(x[3]),u[2]]
 end
 
@@ -116,6 +116,8 @@ X = [Z.data[i].z[1] for i=1:length(Z.data)]
 Y = [Z.data[i].z[2] for i=1:length(Z.data)]
 plot(X, Y, label = "Reference Trajectory")
 
+
+# should start here once traj Z is given by TrajOpt or else
 ρ = 1.0
 Q = Diagonal(@SVector ones(n))
 R = ρ*Diagonal(@SVector ones(m))
