@@ -344,7 +344,7 @@ function linearize(model::AbstractModel, xeq, ueq, dt)
     # Linearize the system about the given point
     n,m = size(model)
     z = KnotPoint(xeq, ueq, dt)
-    ∇f = zeros(n,n+m+1)
+    ∇f = zeros(n,n+m)
     discrete_jacobian!(RK3, ∇f, model, z)
     ix,iu = z._x, z._u
     A = ∇f[ix,ix]
