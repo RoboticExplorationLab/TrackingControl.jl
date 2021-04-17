@@ -5,8 +5,8 @@ abstract type AbstractTest end
     Gradient Expansion
 """
 struct GradientExpansion{T,N,M} <: AbstractExpansion{T}
-	x::SizedVector{N,T,1}
-	u::SizedVector{M,T,1}
+	x::SizedVector{N,T}
+	u::SizedVector{M,T}
 	function GradientExpansion{T}(n::Int,m::Int) where T
 		new{T,n,m}(SizedVector{n}(zeros(T,n)), SizedVector{m}(zeros(T,m)))
 	end
@@ -17,21 +17,21 @@ end
 """
 struct SizedCostExpansion{T,N0,N,M} <: AbstractExpansion{T}
 	# Cost Expansion Terms
-	x ::SizedVector{N0,T,1}
-	xx::SizedMatrix{N0,N0,T,2}
-	u ::SizedVector{M,T,1}
-	uu::SizedMatrix{M,M,T,2}
-	ux::SizedMatrix{M,N0,T,2}
+	x ::SizedVector{N0,T,Vector{T}}
+	xx::SizedMatrix{N0,N0,T,2,Matrix(T}}
+	u ::SizedVector{M,T,Vector{T}}
+	uu::SizedMatrix{M,M,T,2,Matrix{T}}
+	ux::SizedMatrix{M,N0,T,2,Matrix{T}}
 
 	# Error Expansion Terms
-	x_ ::SizedVector{N,T,1}
-	xx_::SizedMatrix{N,N,T,2}
-	u_ ::SizedVector{M,T,1}
-	uu_::SizedMatrix{M,M,T,2}
-	ux_::SizedMatrix{M,N,T,2}
+	x_ ::SizedVector{N,T,Vector{T}}
+	xx_::SizedMatrix{N,N,T,2,Matrix{T}}
+	u_ ::SizedVector{M,T,Vector{T}}
+	uu_::SizedMatrix{M,M,T,2,Matrix{T}}
+	ux_::SizedMatrix{M,N,T,2,Matrix{T}}
 
-	tmp::SizedMatrix{N0,N,T,2}
-	x0::SizedVector{N0,T,1}  # gradient of cost function only (no multipliers)
+	tmp::SizedMatrix{N0,N,T,2,Matrix{T}}
+	x0::SizedVector{N0,T,Vector{T}}  # gradient of cost function only (no multipliers)
 end
 
 function SizedCostExpansion{T}(n0::Int, n::Int, m::Int) where T
@@ -66,12 +66,12 @@ end
     Sized Expansion
 """
 struct SizedExpansion{T,N0,N,M} <: AbstractExpansion{T}
-	x::SizedVector{N,T,1}
-	xx::SizedMatrix{N,N,T,2}
-	u::SizedVector{M,T,1}
-	uu::SizedMatrix{M,M,T,2}
-	ux::SizedMatrix{M,N,T,2}
-	tmp::SizedMatrix{N0,N,T,2}
+	x::SizedVector{N,T,Vector{T}}
+	xx::SizedMatrix{N,N,T,2,Matrix{T}}
+	u::SizedVector{M,T,Vector{T}}
+	uu::SizedMatrix{M,M,T,2,Matrix{T}}
+	ux::SizedMatrix{M,N,T,2,Matrix{T}}
+	tmp::SizedMatrix{N0,N,T,2,Matrix{T}}
 	function SizedExpansion{T}(n::Int) where T
 		x = SizedVector{n}(zeros(n))
 		xx = SizedMatrix{n,n}(zeros(n,n))
@@ -132,11 +132,11 @@ struct SizedDynamicsExpansion{T,N,N̄,M} <: AbstractExpansion{T}
 	∇f::Matrix{T} # n × (n+m+1)
 	A_::SubArray{T,2,Matrix{T},Tuple{UnitRange{Int},UnitRange{Int}},false}
 	B_::SubArray{T,2,Matrix{T},Tuple{UnitRange{Int},UnitRange{Int}},false}
-	A::SizedMatrix{N̄,N̄,T,2}
-	B::SizedMatrix{N̄,M,T,2}
-	tmpA::SizedMatrix{N,N,T,2}
-	tmpB::SizedMatrix{N,M,T,2}
-	tmp::SizedMatrix{N,N̄,T,2}
+	A::SizedMatrix{N̄,N̄,T,2,Matrix{T}}
+	B::SizedMatrix{N̄,M,T,2,Matrix{T}}
+	tmpA::SizedMatrix{N,N,T,2,Matrix{T}}
+	tmpB::SizedMatrix{N,M,T,2,Matrix{T}}
+	tmp::SizedMatrix{N,N̄,T,2,Matrix{T}}
 	function SizedDynamicsExpansion{T}(∇f,A_,B_,A,B,tmpA,tmpB,tmp) where T
 		n, k = size(∇f)
 		m = k-n-1
