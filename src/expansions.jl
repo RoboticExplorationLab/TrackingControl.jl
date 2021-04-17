@@ -18,7 +18,7 @@ end
 struct SizedCostExpansion{T,N0,N,M} <: AbstractExpansion{T}
 	# Cost Expansion Terms
 	x ::SizedVector{N0,T,Vector{T}}
-	xx::SizedMatrix{N0,N0,T,2,Matrix(T}}
+	xx::SizedMatrix{N0,N0,T,2,Matrix{T}}
 	u ::SizedVector{M,T,Vector{T}}
 	uu::SizedMatrix{M,M,T,2,Matrix{T}}
 	ux::SizedMatrix{M,N0,T,2,Matrix{T}}
